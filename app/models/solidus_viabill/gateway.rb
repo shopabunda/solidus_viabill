@@ -5,6 +5,12 @@ module SolidusViabill
     def initialize(*args); end
 
     def authorize(_amount, payment_source, _gateway_options)
+      ActiveMerchant::Billing::Response.new(
+        true,
+        'Transaction approved',
+        payment_source.attributes,
+        authorization: payment_source.order_number
+      )
     end
 
     def capture(*args); end

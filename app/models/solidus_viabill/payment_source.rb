@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_dependency 'solidus_viabill'
 
 module SolidusViabill
