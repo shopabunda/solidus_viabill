@@ -10,6 +10,10 @@ module SolidusViabill
         template 'initializer.rb', 'config/initializers/solidus_viabill.rb'
       end
 
+      def mount_engine
+        route "mount SolidusViabill::Engine, at: '/solidus_viabill'"
+      end
+
       def add_javascripts
         append_file 'vendor/assets/javascripts/spree/frontend/all.js', "//= require spree/frontend/solidus_viabill\n"
         append_file 'vendor/assets/javascripts/spree/backend/all.js', "//= require spree/backend/solidus_viabill\n"

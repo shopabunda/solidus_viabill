@@ -4,7 +4,8 @@ module SolidusViabill
   class Configuration
     # Define here the settings for this extension, e.g.:
     #
-    # attr_accessor :my_setting
+    attr_accessor :viabill_api_key, :viabill_secret_key, :viabill_success_url, :viabill_cancel_url,
+      :viabill_callback_url, :viabill_test_env
   end
 
   class << self
