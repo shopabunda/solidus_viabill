@@ -4,7 +4,7 @@ module SolidusViabill
   module CheckoutHelper
     VIABILL_PROTOCOL = '3.1'
     VIABILL_STATUS = %w[CANCELLED APPROVED REJECTED].freeze
-    def build_checkout_request_body(order)
+    def build_checkout_request_body(order, payment_method_id)
       gateway = SolidusViabill::Gateway.new
       request_body = {
         protocol: VIABILL_PROTOCOL,
@@ -16,7 +16,7 @@ module SolidusViabill
         sha256check: '',
         apikey: SolidusViabill.config.viabill_api_key,
         order_number: order.number,
-        success_url: SolidusViabill.config.viabill_success_url,
+        success_url: "#{SolidusViabill.config.viabill_success_url}?payment_method_id=#{payment_method_id}",
         cancel_url: SolidusViabill.config.viabill_cancel_url,
         callback_url: SolidusViabill.config.viabill_callback_url,
         customParams: {
@@ -43,13 +43,13 @@ module SolidusViabill
       request_body
     end
 
-    def build_payment_params(order, status)
+    def build_payment_params(order, status, payment_method_id)
       raise 'Unverified Status for Payment' unless VIABILL_STATUS.include? status
 
       gateway = SolidusViabill::Gateway.new
       request_body = {
         amount: order.outstanding_balance.to_s,
-        payment_method_id: Spree::PaymentMethod.find_by(type: 'SolidusViabill::ViabillPaymentMethod').id,
+        payment_method_id: payment_method_id,
         source_attributes: {
           transaction_number: order.number,
           order_number: order.number,

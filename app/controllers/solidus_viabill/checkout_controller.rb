@@ -8,14 +8,16 @@ module SolidusViabill
     before_action :load_order
 
     def authorize
-      request_body = build_checkout_request_body(@order)
+      payment_method_id = params[:payment_method_id]
+      request_body = build_checkout_request_body(@order, payment_method_id)
       respond_to do |format|
         format.json { render json: { body: request_body } }
       end
     end
 
     def success
-      payment_params = build_payment_params(@order, 'APPROVED')
+      payment_method_id = params[:payment_method_id]
+      payment_params = build_payment_params(@order, 'APPROVED', payment_method_id)
       @payment = Spree::PaymentCreate.new(@order, payment_params).build
       @order.next! if @payment.save
 

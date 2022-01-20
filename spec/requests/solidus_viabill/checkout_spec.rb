@@ -12,6 +12,7 @@ RSpec.describe 'SolidusViabill::Checkouts', type: :request do
       state: :payment
     )
   }
+  let(:payment_method) { create(:viabill_payment_method) }
 
   around do |test|
     Rails.application.routes.draw do
@@ -33,7 +34,7 @@ RSpec.describe 'SolidusViabill::Checkouts', type: :request do
   describe '#authorize' do
     context 'when respond to json' do
       before do
-        get viabill_checkout_authorize_path({ format: :json })
+        get viabill_checkout_authorize_path({ format: :json, params: { payment_method_id: payment_method.id } })
       end
 
       it 'has http status 200' do
@@ -54,7 +55,7 @@ RSpec.describe 'SolidusViabill::Checkouts', type: :request do
     context 'when respond to html' do
       before do
         create(:viabill_payment_method)
-        get viabill_checkout_success_path
+        get viabill_checkout_success_path({ params: { payment_method_id: payment_method.id } })
       end
 
       it 'has http status 302' do

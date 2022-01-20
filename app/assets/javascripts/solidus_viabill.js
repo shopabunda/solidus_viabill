@@ -2,9 +2,11 @@ let viabillBtn;
 let viabillCheckoutBody;
 let viabillDiv;
 let viabillPaymentForm;
+let frontend;
+let paymentMethodId;
 
 const fetchCheckoutAuthorizeBody = () => {
-  return fetch('/checkout_authorize', {
+  return fetch('/checkout_authorize?payment_method_id=' + paymentMethodId, {
     method: 'GET'
   });
 }
@@ -41,6 +43,14 @@ document.addEventListener('DOMContentLoaded', () => {
   viabillBtn = document.getElementById('viabill-button');
 
   if (viabillBtn) {
+    frontend = viabillBtn.dataset.frontend;
+
+    if (frontend) {
+      paymentMethodId = document.querySelector('[name="order[payments_attributes][][payment_method_id]"]:checked').value
+    } else {
+      paymentMethodId = document.querySelector('[name="payment[payment_method_id]"]:checked').value
+    }
+
     viabillBtn.addEventListener('click', (e) => {
       e.preventDefault();
 

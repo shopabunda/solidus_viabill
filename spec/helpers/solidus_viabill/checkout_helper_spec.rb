@@ -4,10 +4,11 @@ RSpec.describe SolidusViabill::CheckoutHelper, type: :helper do
   let(:spree_user) { create(:user_with_addresses) }
   let(:spree_address) { spree_user.addresses.first }
   let(:order) { create(:order, bill_address: spree_address, ship_address: spree_address, user: spree_user) }
+  let(:payment_method) { create(:viabill_payment_method) }
 
   # rubocop:disable RSpec/MultipleMemoizedHelpers
   describe '#build_checkout_request_body' do
-    subject(:checkout_body) { build_checkout_request_body(order) }
+    subject(:checkout_body) { build_checkout_request_body(order, payment_method.id) }
 
     let(:key_list) {
       [
@@ -48,6 +49,8 @@ RSpec.describe SolidusViabill::CheckoutHelper, type: :helper do
   end
 
   describe '#build_payment_params' do
+    subject(:payment_params) { build_payment_params(order, 'APPROVED', payment_method.id) }
+
     let(:gateway) { SolidusViabill::Gateway.new }
     let(:key_list) {
       [
@@ -69,23 +72,17 @@ RSpec.describe SolidusViabill::CheckoutHelper, type: :helper do
       ]
     }
 
-    before do
-      create(:viabill_payment_method)
-    end
-
     it 'has all keys' do
-      expect(build_payment_params(order, 'APPROVED').keys).to eq key_list
+      expect(payment_params.keys).to eq key_list
     end
 
     it 'has all keys in source_attributes' do
-      expect(
-        build_payment_params(order, 'APPROVED')[:source_attributes].keys
-      ).to eq source_attribute_keys
+      expect(payment_params[:source_attributes].keys).to eq source_attribute_keys
     end
 
     it 'has correct signature' do
       expect(
-        build_payment_params(order, 'APPROVED')[:source_attributes][:signature]
+        payment_params[:source_attributes][:signature]
       ).to eq gateway.generate_signature(
         order.number,
         order.outstanding_balance.to_s,
@@ -100,37 +97,37 @@ RSpec.describe SolidusViabill::CheckoutHelper, type: :helper do
 
     it 'does not raise error for status "APPROVED"' do
       expect{
-        build_payment_params(order, 'APPROVED')
+        build_payment_params(order, 'APPROVED', payment_method.id)
       }.not_to raise_error RuntimeError
     end
 
     it 'does not raise error for status "CANCELLED"' do
       expect{
-        build_payment_params(order, 'CANCELLED')
+        build_payment_params(order, 'CANCELLED', payment_method.id)
       }.not_to raise_error RuntimeError
     end
 
     it 'does not raise error for status "REJECTED"' do
       expect{
-        build_payment_params(order, 'REJECTED')
+        build_payment_params(order, 'REJECTED', payment_method.id)
       }.not_to raise_error RuntimeError
     end
 
     it 'raises error for unrecognised status' do
       expect{
-        build_payment_params(order, 'FAILED')
+        build_payment_params(order, 'FAILED', payment_method.id)
       }.to raise_error RuntimeError
     end
 
     it 'raises error for empty status' do
       expect{
-        build_payment_params(order, ' ')
+        build_payment_params(order, ' ', payment_method.id)
       }.to raise_error RuntimeError
     end
 
     it 'raises error for nil status' do
       expect{
-        build_payment_params(order, nil)
+        build_payment_params(order, nil, payment_method.id)
       }.to raise_error RuntimeError
     end
   end
