@@ -1,9 +1,24 @@
 require 'spec_helper'
+require 'net/http'
 
+# rubocop:disable RSpec/MultipleMemoizedHelpers
 RSpec.describe SolidusViabill::Gateway, type: :model do
   let(:gateway) { described_class.new }
+  let(:spree_user) { create(:user_with_addresses) }
+  let(:spree_address) { spree_user.addresses.first }
+  let(:order) { create(:order, bill_address: spree_address, ship_address: spree_address, user: spree_user) }
   let(:payment_method) { create(:viabill_payment_method) }
   let(:payment_source) { create(:viabill_payment_source, payment_method_id: payment_method.id) }
+  let(:payment) {
+    create(
+      :payment,
+      order: order,
+      amount: order.outstanding_balance,
+      source_type: "SolidusViabill::PaymentSource",
+      source_id: payment_source.id,
+      payment_method_id: payment_method.id
+    )
+  }
 
   describe '#initialize' do
     it 'initializes without any arguments' do
@@ -36,4 +51,20 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
       expect(authorize_response.class).to eq ActiveMerchant::Billing::Response
     end
   end
+
+  describe '#capture' do
+    subject(:capture_response) { gateway.capture(100, order.number, { originator: payment }) }
+
+    before do
+      order.update(state: 'complete')
+      payment.update(state: 'pending')
+      response = Net::HTTPNoContent.new('', '204', 'NoContent')
+      allow(gateway).to receive(:send_post_request).and_return(response)
+    end
+
+    it 'successfully returns a response' do
+      expect(capture_response.class).to eq ActiveMerchant::Billing::Response
+    end
+  end
 end
+# rubocop:enable RSpec/MultipleMemoizedHelpers
