@@ -6,7 +6,7 @@ let frontend;
 let paymentMethodId;
 
 const fetchCheckoutAuthorizeBody = () => {
-  return fetch('/checkout_authorize?payment_method_id=' + paymentMethodId, {
+  return fetch('/api/checkout_authorize?payment_method_id=' + paymentMethodId, {
     method: 'GET'
   });
 }

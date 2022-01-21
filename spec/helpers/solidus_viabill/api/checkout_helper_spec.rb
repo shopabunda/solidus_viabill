@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe SolidusViabill::CheckoutHelper, type: :helper do
+RSpec.describe SolidusViabill::Api::CheckoutHelper, type: :helper do
   let(:spree_user) { create(:user_with_addresses) }
   let(:spree_address) { spree_user.addresses.first }
   let(:order) { create(:order, bill_address: spree_address, ship_address: spree_address, user: spree_user) }

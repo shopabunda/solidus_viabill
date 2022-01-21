@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'SolidusViabill::Checkouts', type: :request do
+RSpec.describe "SolidusViabill::Api::Checkouts", type: :request do
   let(:spree_user) { create(:user_with_addresses) }
   let(:spree_address) { spree_user.addresses.first }
   let(:order) {
@@ -16,8 +16,9 @@ RSpec.describe 'SolidusViabill::Checkouts', type: :request do
 
   around do |test|
     Rails.application.routes.draw do
-      get '/checkout_authorize', to: 'solidus_viabill/checkout#authorize', as: "viabill_checkout_authorize"
-      get '/checkout_success', to: 'solidus_viabill/checkout#success', as: 'viabill_checkout_success'
+      get '/api/checkout_authorize', to: 'solidus_viabill/api/checkout#authorize', as: 'viabill_checkout_authorize'
+      get '/api/checkout_callback', to: 'solidus_viabill/api/checkout#callback', as: 'viabill_checkout_callback'
+      get '/api/checkout_success', to: 'solidus_viabill/api/checkout#success', as: 'viabill_checkout_success'
 
       mount Spree::Core::Engine, at: '/'
     end
