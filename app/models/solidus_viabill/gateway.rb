@@ -52,7 +52,40 @@ module SolidusViabill
       )
     end
 
-    def void(*args); end
+    def void(order_number, gateway_options)
+      request_url = "#{SolidusViabill.viabill_url}/transaction/refund"
+      api_key = SolidusViabill.config.viabill_api_key
+      secret_key = SolidusViabill.config.viabill_secret_key
+      currency = gateway_options[:currency]
+      payment = gateway_options[:originator]
+      amount = payment.amount.to_f
+      payment_source = payment.source
+
+      params = {
+        'signature' => generate_signature(
+          order_number,
+          api_key,
+          amount,
+          currency,
+          secret_key,
+          '#'
+        ),
+        'amount' => amount.to_s,
+        'currency' => currency,
+        'id' => order_number,
+        'apikey' => api_key
+      }
+      response = send_post_request(request_url, params)
+      raise 'Viabill Server Response Error: Did not get correct response code' unless response.code == '204'
+
+      payment_source.update(status: 'REFUNDED')
+      ActiveMerchant::Billing::Response.new(
+        true,
+        'Transaction refunded',
+        payment_source.attributes,
+        authorization: payment_source.order_number
+      )
+    end
 
     def purchase(float_amount, payment_source, gateway_options)
       capture(float_amount, payment_source.order_number, gateway_options)

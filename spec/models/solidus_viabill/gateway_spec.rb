@@ -84,4 +84,25 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
       expect(purchase_response.class).to eq ActiveMerchant::Billing::Response
     end
   end
+
+  describe '#void' do
+    subject(:void_response) { gateway.void(order.number, { originator: payment, currency: 'USD' }) }
+
+    before do
+      response = Net::HTTPNoContent.new('', '204', 'NoContent')
+      # rubocop:disable RSpec/AnyInstance
+      allow_any_instance_of(described_class).to receive(:send_post_request).and_return(response)
+      # rubocop:enable RSpec/AnyInstance
+    end
+
+    it 'successfully returns a response' do
+      expect(void_response.class).to eq ActiveMerchant::Billing::Response
+    end
+
+    it 'successfully updates source' do
+      void_response
+      payment_source.reload
+      expect(payment_source.status).to eq 'REFUNDED'
+    end
+  end
 end
