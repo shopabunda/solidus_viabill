@@ -33,9 +33,41 @@ RSpec.describe "SolidusViabill::Api::Checkouts", type: :request do
   end
 
   describe '#authorize' do
-    context 'when respond to json' do
+    context 'when respond to json from frontend' do
       before do
-        get viabill_checkout_authorize_path({ format: :json, params: { payment_method_id: payment_method.id } })
+        get viabill_checkout_authorize_path({
+          format: :json,
+          params: {
+            payment_method_id: payment_method.id,
+            frontend: true,
+            order_number: order.number
+          }
+        })
+      end
+
+      it 'has http status 200' do
+        expect(response.status).to eq(200)
+      end
+
+      it 'has correct keys in response body' do
+        expect(JSON.parse(response.body).keys).to eq ['body']
+      end
+
+      it 'has correct data type for response body' do
+        expect(JSON.parse(response.body).class).to eq 'Hash'.constantize
+      end
+    end
+
+    context 'when respond to json from backend' do
+      before do
+        get viabill_checkout_authorize_path({
+          format: :json,
+          params: {
+            payment_method_id: payment_method.id,
+            frontend: false,
+            order_number: order.number
+          }
+        })
       end
 
       it 'has http status 200' do
@@ -53,10 +85,16 @@ RSpec.describe "SolidusViabill::Api::Checkouts", type: :request do
   end
 
   describe '#success' do
-    context 'when respond to html' do
+    context 'when respond to html from frontend' do
       before do
         create(:viabill_payment_method)
-        get viabill_checkout_success_path({ params: { payment_method_id: payment_method.id } })
+        get viabill_checkout_success_path({
+          params: {
+            payment_method_id: payment_method.id,
+            frontend: true,
+            order_number: order.number
+          }
+        })
       end
 
       it 'has http status 302' do
@@ -65,6 +103,27 @@ RSpec.describe "SolidusViabill::Api::Checkouts", type: :request do
 
       it 'redirects to correct location' do
         expect(response).to redirect_to '/checkout/confirm'
+      end
+    end
+
+    context 'when respond to html from backend' do
+      before do
+        create(:viabill_payment_method)
+        get viabill_checkout_success_path({
+          params: {
+            payment_method_id: payment_method.id,
+            frontend: false,
+            order_number: order.number
+          }
+        })
+      end
+
+      it 'has http status 302' do
+        expect(response.status).to eq(302)
+      end
+
+      it 'redirects to correct location' do
+        expect(response).to redirect_to "/admin/orders/#{order.number}/confirm"
       end
     end
   end

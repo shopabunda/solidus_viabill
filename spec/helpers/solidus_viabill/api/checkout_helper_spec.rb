@@ -7,43 +7,86 @@ RSpec.describe SolidusViabill::Api::CheckoutHelper, type: :helper do
   let(:payment_method) { create(:viabill_payment_method) }
 
   describe '#build_checkout_request_body' do
-    subject(:checkout_body) { build_checkout_request_body(order, payment_method.id) }
+    context 'when frontend is true' do
+      subject(:checkout_body) { build_checkout_request_body(order, payment_method.id, true) }
 
-    let(:key_list) {
-      [
-        :protocol,
-        :transaction,
-        :amount,
-        :currency,
-        :test,
-        :md5check,
-        :sha256check,
-        :apikey,
-        :order_number,
-        :success_url,
-        :cancel_url,
-        :callback_url,
-        :customParams
-      ]
-    }
-    let(:custom_param_key_list) {
-      [
-        :email,
-        :phoneNumber,
-        :fullName,
-        :address,
-        :city,
-        :postalCode,
-        :country
-      ]
-    }
+      let(:key_list) {
+        [
+          :protocol,
+          :transaction,
+          :amount,
+          :currency,
+          :test,
+          :md5check,
+          :sha256check,
+          :apikey,
+          :order_number,
+          :success_url,
+          :cancel_url,
+          :callback_url,
+          :customParams
+        ]
+      }
+      let(:custom_param_key_list) {
+        [
+          :email,
+          :phoneNumber,
+          :fullName,
+          :address,
+          :city,
+          :postalCode,
+          :country
+        ]
+      }
 
-    it 'has all keys' do
-      expect(checkout_body.keys).to eq key_list
+      it 'has all keys' do
+        expect(checkout_body.keys).to eq key_list
+      end
+
+      it 'has all keys in customParams' do
+        expect(checkout_body[:customParams].keys).to eq custom_param_key_list
+      end
     end
 
-    it 'has all keys in customParams' do
-      expect(checkout_body[:customParams].keys).to eq custom_param_key_list
+    context 'when frontend is false' do
+      subject(:checkout_body) { build_checkout_request_body(order, payment_method.id, false) }
+
+      let(:key_list) {
+        [
+          :protocol,
+          :transaction,
+          :amount,
+          :currency,
+          :test,
+          :md5check,
+          :sha256check,
+          :apikey,
+          :order_number,
+          :success_url,
+          :cancel_url,
+          :callback_url,
+          :customParams
+        ]
+      }
+      let(:custom_param_key_list) {
+        [
+          :email,
+          :phoneNumber,
+          :fullName,
+          :address,
+          :city,
+          :postalCode,
+          :country
+        ]
+      }
+
+      it 'has all keys' do
+        expect(checkout_body.keys).to eq key_list
+      end
+
+      it 'has all keys in customParams' do
+        expect(checkout_body[:customParams].keys).to eq custom_param_key_list
+      end
     end
   end
 
