@@ -1,14 +1,19 @@
 require 'spec_helper'
 require 'net/http'
 
-# rubocop:disable RSpec/MultipleMemoizedHelpers
 RSpec.describe SolidusViabill::Gateway, type: :model do
   let(:gateway) { described_class.new }
   let(:spree_user) { create(:user_with_addresses) }
   let(:spree_address) { spree_user.addresses.first }
   let(:order) { create(:order, bill_address: spree_address, ship_address: spree_address, user: spree_user) }
   let(:payment_method) { create(:viabill_payment_method) }
-  let(:payment_source) { create(:viabill_payment_source, payment_method_id: payment_method.id) }
+  let(:payment_source) {
+    create(
+      :viabill_payment_source,
+      payment_method_id: payment_method.id,
+      order_number: order.number
+    )
+  }
   let(:payment) {
     create(
       :payment,
@@ -53,7 +58,7 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
   end
 
   describe '#capture' do
-    subject(:capture_response) { gateway.capture(100, order.number, { originator: payment }) }
+    subject(:capture_response) { gateway.capture(100, order.number, { originator: payment, currency: 'USD' }) }
 
     before do
       order.update(state: 'complete')
@@ -66,5 +71,17 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
       expect(capture_response.class).to eq ActiveMerchant::Billing::Response
     end
   end
+
+  describe '#purchase' do
+    subject(:purchase_response) { gateway.purchase(100, payment_source, { originator: payment, currency: 'USD' }) }
+
+    before do
+      response = Net::HTTPNoContent.new('', '204', 'NoContent')
+      allow(gateway).to receive(:send_post_request).and_return(response)
+    end
+
+    it 'successfully returns a response' do
+      expect(purchase_response.class).to eq ActiveMerchant::Billing::Response
+    end
+  end
 end
-# rubocop:enable RSpec/MultipleMemoizedHelpers

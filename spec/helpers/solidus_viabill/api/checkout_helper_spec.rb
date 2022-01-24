@@ -6,7 +6,6 @@ RSpec.describe SolidusViabill::Api::CheckoutHelper, type: :helper do
   let(:order) { create(:order, bill_address: spree_address, ship_address: spree_address, user: spree_user) }
   let(:payment_method) { create(:viabill_payment_method) }
 
-  # rubocop:disable RSpec/MultipleMemoizedHelpers
   describe '#build_checkout_request_body' do
     subject(:checkout_body) { build_checkout_request_body(order, payment_method.id) }
 
@@ -131,5 +130,4 @@ RSpec.describe SolidusViabill::Api::CheckoutHelper, type: :helper do
       }.to raise_error RuntimeError
     end
   end
-  # rubocop:enable RSpec/MultipleMemoizedHelpers
 end
