@@ -89,7 +89,7 @@ RSpec.describe SolidusViabill::Api::CheckoutHelper, type: :helper do
         order.number,
         'APPROVED',
         Time.now.to_i,
-        SolidusViabill.config.viabill_secret_key,
+        payment_method.preferences[:viabill_secret_key],
         '#'
       )
     end

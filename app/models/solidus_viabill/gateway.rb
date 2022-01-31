@@ -19,11 +19,12 @@ module SolidusViabill
     end
 
     def capture(float_amount, order_number, gateway_options)
-      api_key = SolidusViabill.config.viabill_api_key
-      secret_key = SolidusViabill.config.viabill_secret_key
+      payment_source = gateway_options[:originator].source
+      payment_method = gateway_options[:originator].payment_method
+      api_key = payment_method.preferences[:viabill_api_key]
+      secret_key = payment_method.preferences[:viabill_secret_key]
       request_url = "#{SolidusViabill.viabill_url}/transaction/capture"
       currency = gateway_options[:currency]
-      payment_source = gateway_options[:originator].source
       raise 'Viabill Payment is not Approved' unless payment_source.status == 'APPROVED'
 
       capture_amount = (-float_amount.to_f / 100).to_s
@@ -53,11 +54,12 @@ module SolidusViabill
     end
 
     def void(order_number, gateway_options)
-      request_url = "#{SolidusViabill.viabill_url}/transaction/refund"
-      api_key = SolidusViabill.config.viabill_api_key
-      secret_key = SolidusViabill.config.viabill_secret_key
+      payment_method = gateway_options[:originator].payment_method
+      api_key = payment_method.preferences[:viabill_api_key]
+      secret_key = payment_method.preferences[:viabill_secret_key]
       currency = gateway_options[:currency]
       payment = gateway_options[:originator]
+      request_url = "#{SolidusViabill.viabill_url}/transaction/refund"
       amount = payment.amount.to_f
       payment_source = payment.source
 

@@ -7,7 +7,7 @@ module SolidusViabill
     preference :viabill_success_url, :string
     preference :viabill_cancel_url, :string
     preference :viabill_callback_url, :string
-    preference :viabill_test_env, :string
+    preference :viabill_test_env, :boolean
 
     def gateway_class
       ::SolidusViabill::Gateway

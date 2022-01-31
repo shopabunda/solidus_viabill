@@ -6,10 +6,6 @@ module SolidusViabill
       class_option :auto_run_migrations, type: :boolean, default: false
       source_root File.expand_path('templates', __dir__)
 
-      def copy_initializer
-        template 'initializer.rb', 'config/initializers/solidus_viabill.rb'
-      end
-
       def mount_engine
         route "mount SolidusViabill::Engine, at: '/solidus_viabill'"
       end

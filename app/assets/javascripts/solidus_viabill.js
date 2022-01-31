@@ -45,14 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (viabillBtn) {
     frontend = viabillBtn.dataset.frontend;
 
-    if (frontend) {
-      paymentMethodId = document.querySelector('[name="order[payments_attributes][][payment_method_id]"]:checked').value
-    } else {
-      paymentMethodId = document.querySelector('[name="payment[payment_method_id]"]:checked').value
-    }
-
     viabillBtn.addEventListener('click', (e) => {
       e.preventDefault();
+
+      if (frontend) {
+        paymentMethodId = document.querySelector('[name="order[payments_attributes][][payment_method_id]"]:checked').value
+      } else {
+        paymentMethodId = document.querySelector('[name="payment[payment_method_id]"]:checked').value
+      }
 
       fetchCheckoutAuthorizeBody()
       .then((resp) => resp.json())

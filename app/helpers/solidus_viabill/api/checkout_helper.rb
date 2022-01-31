@@ -7,19 +7,20 @@ module SolidusViabill
       VIABILL_STATUS = %w[CANCELLED APPROVED REJECTED].freeze
       def build_checkout_request_body(order, payment_method_id)
         gateway = SolidusViabill::Gateway.new
+        payment_method = Spree::PaymentMethod.find_by(id: payment_method_id)
         request_body = {
           protocol: VIABILL_PROTOCOL,
           transaction: order.number,
           amount: order.outstanding_balance.to_s,
           currency: order.currency,
-          test: SolidusViabill.config.viabill_test_env.to_s,
+          test: payment_method.preferences[:viabill_test_env].to_s,
           md5check: '',
           sha256check: '',
-          apikey: SolidusViabill.config.viabill_api_key,
+          apikey: payment_method.preferences[:viabill_api_key],
           order_number: order.number,
-          success_url: "#{SolidusViabill.config.viabill_success_url}?payment_method_id=#{payment_method_id}",
-          cancel_url: SolidusViabill.config.viabill_cancel_url,
-          callback_url: SolidusViabill.config.viabill_callback_url,
+          success_url: "#{payment_method.preferences[:viabill_success_url]}?payment_method_id=#{payment_method_id}",
+          cancel_url: payment_method.preferences[:viabill_cancel_url],
+          callback_url: payment_method.preferences[:viabill_callback_url],
           customParams: {
             email: order.email,
             phoneNumber: order.bill_address&.phone,
@@ -38,7 +39,7 @@ module SolidusViabill
           request_body[:order_number],
           request_body[:success_url],
           request_body[:cancel_url],
-          SolidusViabill.config.viabill_secret_key,
+          payment_method.preferences[:viabill_secret_key],
           '#'
         )
         request_body
@@ -48,6 +49,7 @@ module SolidusViabill
         raise 'Unverified Status for Payment' unless VIABILL_STATUS.include? status
 
         gateway = SolidusViabill::Gateway.new
+        payment_method = Spree::PaymentMethod.find_by(id: payment_method_id)
         request_body = {
           amount: order.outstanding_balance.to_s,
           payment_method_id: payment_method_id,
@@ -68,7 +70,7 @@ module SolidusViabill
           request_body[:source_attributes][:order_number],
           request_body[:source_attributes][:status],
           request_body[:source_attributes][:time],
-          SolidusViabill.config.viabill_secret_key,
+          payment_method.preferences[:viabill_secret_key],
           '#'
         )
         request_body
