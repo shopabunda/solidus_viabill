@@ -21,7 +21,61 @@ bin/rails generate solidus_viabill:install
 
 ## Usage
 
-<!-- Explain how to use your extension once it's been installed. -->
+Go to admin/payment_methods and click on `New Payment Method` Button
+
+Select `Viabill Payment Method` in the type field and give your payment method a `name` and `description`.
+
+Click on the `Create` to create your new payment method.
+
+Now there are 2 ways to implement credentials for the extension
+
+### 1. Custom Credentials Method
+
+After the payment method is successfully created, you will get the following options.
+
+- Server
+- Test Mode
+- Viabill api key
+- Viabill secret key
+- Viabill success url
+- Viabill cancel url
+- Viabill checkout url
+
+The following values are recommended in the fields
+
+| Field | Value |
+| ------ | ------ |
+| Server | '' |
+| Test Mode | Deactivate in `production` environment, keep this option active in every other environment |
+| Viabill api key | Your api key from viabill |
+| Viabill secret key | Your secret key from viabill |
+| Viabill success url | full address + '/api/checkout_success' |
+| Viabill cancel url | full address + '/checkout/payment' |
+| Viabill checkout url | full address + '/api/checkout_callback' |
+| Viabill test | `false` for production environment and `true` for the rest |
+
+It is important to fill these fields as the value in these fields allow the extension to interface with Viabill. Click on the `Update` button once all the fields are filled.
+
+### 2. Static Credentials Method
+
+After the payment method is successfully created , you can select the `viabill_credentials` option from the `Preference Source` field in the form.
+
+This will allow the extension to load static credentails from the ENV variables.
+
+You can load static credentials by using the following environment variables when deploying your rails application.
+
+| ENV Variable | Value |
+| ------ | ------ |
+| VIABILL_API_KEY | Your api key from viabill |
+| VIABILL_SECRET_KEY | Your secret key from viabill |
+| VIABILL_SUCCESS_URL | full address + '/api/checkout_success' |
+| VIABILL_CANCEL_URL | full address + '/checkout/payment' |
+| VIABILL_CALLBACK_URL | full address + '/api/checkout_callback' |
+| VIABILL_TEST_ENV | `false` for production environment and `true` for the rest |
+
+-
+
+After everything is successfully completed you can see your new payment method in the payment options for an order.
 
 ## Development
 
