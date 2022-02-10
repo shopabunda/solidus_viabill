@@ -91,12 +91,6 @@ module SolidusViabill
 
     def purchase(float_amount, payment_source, gateway_options)
       capture(float_amount, payment_source.order_number, gateway_options)
-      ActiveMerchant::Billing::Response.new(
-        true,
-        'Transaction approved and captured',
-        payment_source.attributes,
-        authorization: payment_source.order_number
-      )
     end
 
     def generate_signature(*args, join_character)
