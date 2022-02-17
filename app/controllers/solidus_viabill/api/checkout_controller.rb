@@ -29,7 +29,9 @@ module SolidusViabill
         redirect_to redirect_url
       end
 
-      def callback; end
+      def callback
+        render json: {}, status: :ok
+      end
 
       private
 
