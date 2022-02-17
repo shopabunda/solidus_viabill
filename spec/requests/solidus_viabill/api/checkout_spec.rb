@@ -127,4 +127,12 @@ RSpec.describe "SolidusViabill::Api::Checkouts", type: :request do
       end
     end
   end
+
+  describe '#callback' do
+    before { post viabill_checkout_callback_path }
+
+    it 'has http status 200' do
+      expect(response.status).to eq(200)
+    end
+  end
 end
