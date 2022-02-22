@@ -6,7 +6,8 @@ module SolidusViabill
       include Spree::Core::ControllerHelpers::Order
       include SolidusViabill::Api::CheckoutHelper
 
-      before_action :load_order
+      skip_before_action :verify_authenticity_token
+      before_action :load_order, only: %i[authorize success]
 
       def authorize
         payment_method_id = params[:payment_method_id]
