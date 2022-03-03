@@ -43,7 +43,7 @@ module SolidusViabill
         'apikey' => api_key
       }
       response = send_post_request(request_url, params)
-      raise 'Viabill Server Response Error: Did not get correct response code' unless response.code == '204'
+      raise 'Viabill Server Response Error: Did not get correct code' unless %w[200 202 204].include?(response.code)
 
       ActiveMerchant::Billing::Response.new(
         true,
@@ -53,32 +53,66 @@ module SolidusViabill
       )
     end
 
-    def void(order_number, gateway_options)
-      payment_method = gateway_options[:originator].payment_method
+    def void(response_code, options)
+      payment_method = options[:originator].payment_method
       api_key = payment_method.preferences[:viabill_api_key]
       secret_key = payment_method.preferences[:viabill_secret_key]
-      currency = gateway_options[:currency]
-      payment = gateway_options[:originator]
-      request_url = "#{SolidusViabill.viabill_url}/transaction/refund"
-      amount = payment.amount.to_f
-      payment_source = payment.source
+      payment_source = options[:originator].source
+
+      request_url = "#{SolidusViabill.viabill_url}/transaction/cancel"
 
       params = {
         'signature' => generate_signature(
-          order_number,
+          response_code,
           api_key,
-          amount,
+          secret_key,
+          '#'
+        ),
+        'id' => response_code,
+        'apikey' => api_key
+      }
+      response = send_post_request(request_url, params)
+      raise 'Viabill Server Response Error: Did not get correct code' unless %w[200 202 204].include?(response.code)
+
+      payment_source.update(status: 'CANCELED')
+      ActiveMerchant::Billing::Response.new(
+        true,
+        'Transaction canceled',
+        payment_source.attributes,
+        authorization: payment_source.order_number
+      )
+    end
+
+    def purchase(float_amount, payment_source, gateway_options)
+      capture(float_amount, payment_source.order_number, gateway_options)
+    end
+
+    def credit(amount, response_code, options)
+      float_amount = amount / 100.0
+      payment = options[:originator].payment
+      payment_method = payment.payment_method
+      api_key = payment_method.preferences[:viabill_api_key]
+      secret_key = payment_method.preferences[:viabill_secret_key]
+      currency = payment.currency
+      payment_source = payment.source
+      request_url = "#{SolidusViabill.viabill_url}/transaction/refund"
+
+      params = {
+        'signature' => generate_signature(
+          response_code,
+          api_key,
+          float_amount,
           currency,
           secret_key,
           '#'
         ),
-        'amount' => amount.to_s,
+        'amount' => float_amount.to_s,
         'currency' => currency,
-        'id' => order_number,
+        'id' => response_code,
         'apikey' => api_key
       }
       response = send_post_request(request_url, params)
-      raise 'Viabill Server Response Error: Did not get correct response code' unless response.code == '204'
+      raise 'Viabill Server Response Error: Did not get correct code' unless %w[200 202 204].include?(response.code)
 
       payment_source.update(status: 'REFUNDED')
       ActiveMerchant::Billing::Response.new(
@@ -87,10 +121,6 @@ module SolidusViabill
         payment_source.attributes,
         authorization: payment_source.order_number
       )
-    end
-
-    def purchase(float_amount, payment_source, gateway_options)
-      capture(float_amount, payment_source.order_number, gateway_options)
     end
 
     def generate_signature(*args, join_character)

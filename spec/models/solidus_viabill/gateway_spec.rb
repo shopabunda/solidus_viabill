@@ -18,12 +18,13 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
     create(
       :payment,
       order: order,
-      amount: order.outstanding_balance,
+      amount: order.outstanding_balance + 100, # adding 100 to pass "Amount is greater than the allowed amount" error
       source_type: "SolidusViabill::PaymentSource",
       source_id: payment_source.id,
       payment_method_id: payment_method.id
     )
   }
+  let(:refund) { create(:refund, payment: payment) }
 
   describe '#initialize' do
     it 'initializes without any arguments' do
@@ -101,6 +102,27 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
 
     it 'successfully updates source' do
       void_response
+      payment_source.reload
+      expect(payment_source.status).to eq 'CANCELED'
+    end
+  end
+
+  describe '#credit' do
+    subject(:credit_response) { gateway.credit(100, order.number, { originator: refund, currency: 'USD' }) }
+
+    before do
+      response = Net::HTTPNoContent.new('', '204', 'NoContent')
+      # rubocop:disable RSpec/AnyInstance
+      allow_any_instance_of(described_class).to receive(:send_post_request).and_return(response)
+      # rubocop:enable RSpec/AnyInstance
+    end
+
+    it 'successfully returns a response' do
+      expect(credit_response.class).to eq ActiveMerchant::Billing::Response
+    end
+
+    it 'successfully updates source' do
+      credit_response
       payment_source.reload
       expect(payment_source.status).to eq 'REFUNDED'
     end
