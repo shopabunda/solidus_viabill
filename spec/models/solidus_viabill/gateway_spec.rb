@@ -2,7 +2,8 @@ require 'spec_helper'
 require 'net/http'
 
 RSpec.describe SolidusViabill::Gateway, type: :model do
-  let(:gateway) { described_class.new }
+  let(:options) { { api_key: 'api', secret_key: 'secret' } }
+  let(:gateway) { described_class.new(options) }
   let(:spree_user) { create(:user_with_addresses) }
   let(:spree_address) { spree_user.addresses.first }
   let(:order) { create(:order, bill_address: spree_address, ship_address: spree_address, user: spree_user) }
@@ -32,9 +33,7 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
     end
 
     it 'initializes with arguments' do
-      expect(
-        described_class.new('payments', 1000, { success: true }).class
-      ).to eq described_class
+      expect(described_class.new({ arg1: 'arg1', arg2: 'arg2' }).class).to eq described_class
     end
   end
 
