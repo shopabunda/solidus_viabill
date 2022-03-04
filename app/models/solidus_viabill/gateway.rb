@@ -7,11 +7,15 @@ module SolidusViabill
   class Gateway
     include SolidusViabill
 
-    attr_reader :api_key, :secret_key
+    attr_reader :api_key, :secret_key, :test_env, :success_url, :cancel_url, :callback_url
 
     def initialize(options = {})
-      @api_key =    options[:viabill_api_key]
-      @secret_key = options[:viabill_secret_key]
+      @api_key =      options[:viabill_api_key]
+      @secret_key =   options[:viabill_secret_key]
+      @test_env =     options[:viabill_test_env]
+      @success_url =  options[:viabill_success_url]
+      @cancel_url =   options[:viabill_cancel_url]
+      @callback_url = options[:viabill_callback_url]
     end
 
     def authorize(_amount, payment_source, _gateway_options)
@@ -36,8 +40,7 @@ module SolidusViabill
           api_key,
           capture_amount,
           currency,
-          secret_key,
-          '#'
+          secret_key
         ),
         'amount' => capture_amount,
         'currency' => currency,
@@ -64,8 +67,7 @@ module SolidusViabill
         'signature' => generate_signature(
           response_code,
           api_key,
-          secret_key,
-          '#'
+          secret_key
         ),
         'id' => response_code,
         'apikey' => api_key
@@ -99,8 +101,7 @@ module SolidusViabill
           api_key,
           float_amount,
           currency,
-          secret_key,
-          '#'
+          secret_key
         ),
         'amount' => float_amount.to_s,
         'currency' => currency,
@@ -119,8 +120,10 @@ module SolidusViabill
       )
     end
 
-    def generate_signature(*args, join_character)
-      base_string = args.join(join_character)
+    def generate_signature(*args)
+      raise ArgumentError if args.blank?
+
+      base_string = args.join('#')
       Digest::SHA256.hexdigest(base_string)
     end
 

@@ -40,7 +40,7 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
   describe '#generate signature' do
     it 'generates the correct signature' do
       expect(
-        gateway.generate_signature('Batman Begins', 'Dark Knight', 'Dark Knight Rises', '#')
+        gateway.generate_signature('Batman Begins', 'Dark Knight', 'Dark Knight Rises')
       ).to eq '52243a4cfc033e15700abdd78184d9e198d0956be71e0d9befe7044408d2bfb8'
     end
 
