@@ -6,22 +6,22 @@ module SolidusViabill
       VIABILL_PROTOCOL = '3.1'
       VIABILL_STATUS = %w[CANCELLED APPROVED REJECTED].freeze
       def build_checkout_request_body(order, payment_method_id, frontend)
-        gateway = SolidusViabill::Gateway.new
         payment_method = Spree::PaymentMethod.find_by(id: payment_method_id)
+        gateway = SolidusViabill::Gateway.new(payment_method.preferences)
         success_url_params = "?payment_method_id=#{payment_method_id}&frontend=#{frontend}&order_number=#{order.number}"
         request_body = {
           protocol: VIABILL_PROTOCOL,
           transaction: order.number,
           amount: order.outstanding_balance.to_s,
           currency: order.currency,
-          test: payment_method.preferences[:viabill_test_env].to_s,
+          test: gateway.test_env.to_s,
           md5check: '',
           sha256check: '',
-          apikey: payment_method.preferences[:viabill_api_key],
+          apikey: gateway.api_key,
           order_number: order.number,
-          success_url: "#{payment_method.preferences[:viabill_success_url]}#{success_url_params}",
-          cancel_url: payment_method.preferences[:viabill_cancel_url],
-          callback_url: payment_method.preferences[:viabill_callback_url],
+          success_url: "#{gateway.success_url}#{success_url_params}",
+          cancel_url: gateway.cancel_url,
+          callback_url: gateway.callback_url,
           customParams: {
             email: order.email,
             phoneNumber: order.bill_address&.phone,
@@ -33,15 +33,14 @@ module SolidusViabill
           }
         }
         request_body[:sha256check] = gateway.generate_signature(
-          request_body[:apikey],
+          gateway.api_key,
           request_body[:amount],
           request_body[:currency],
           request_body[:transaction],
           request_body[:order_number],
-          request_body[:success_url],
-          request_body[:cancel_url],
-          payment_method.preferences[:viabill_secret_key],
-          '#'
+          gateway.success_url,
+          gateway.cancel_url,
+          gateway.secret_key
         )
         request_body
       end
@@ -49,8 +48,8 @@ module SolidusViabill
       def build_payment_params(order, status, payment_method_id)
         raise 'Unverified Status for Payment' unless VIABILL_STATUS.include? status
 
-        gateway = SolidusViabill::Gateway.new
         payment_method = Spree::PaymentMethod.find_by(id: payment_method_id)
+        gateway = SolidusViabill::Gateway.new(payment_method.preferences)
         request_body = {
           amount: order.outstanding_balance.to_s,
           payment_method_id: payment_method_id,
@@ -71,8 +70,7 @@ module SolidusViabill
           request_body[:source_attributes][:order_number],
           request_body[:source_attributes][:status],
           request_body[:source_attributes][:time],
-          payment_method.preferences[:viabill_secret_key],
-          '#'
+          gateway.secret_key
         )
         request_body
       end

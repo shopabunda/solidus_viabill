@@ -2,7 +2,8 @@ require 'spec_helper'
 require 'net/http'
 
 RSpec.describe SolidusViabill::Gateway, type: :model do
-  let(:gateway) { described_class.new }
+  let(:options) { { api_key: 'api', secret_key: 'secret' } }
+  let(:gateway) { described_class.new(options) }
   let(:spree_user) { create(:user_with_addresses) }
   let(:spree_address) { spree_user.addresses.first }
   let(:order) { create(:order, bill_address: spree_address, ship_address: spree_address, user: spree_user) }
@@ -18,12 +19,13 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
     create(
       :payment,
       order: order,
-      amount: order.outstanding_balance,
+      amount: order.outstanding_balance + 100, # adding 100 to pass "Amount is greater than the allowed amount" error
       source_type: "SolidusViabill::PaymentSource",
       source_id: payment_source.id,
       payment_method_id: payment_method.id
     )
   }
+  let(:refund) { create(:refund, payment: payment) }
 
   describe '#initialize' do
     it 'initializes without any arguments' do
@@ -31,16 +33,14 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
     end
 
     it 'initializes with arguments' do
-      expect(
-        described_class.new('payments', 1000, { success: true }).class
-      ).to eq described_class
+      expect(described_class.new({ arg1: 'arg1', arg2: 'arg2' }).class).to eq described_class
     end
   end
 
   describe '#generate signature' do
     it 'generates the correct signature' do
       expect(
-        gateway.generate_signature('Batman Begins', 'Dark Knight', 'Dark Knight Rises', '#')
+        gateway.generate_signature('Batman Begins', 'Dark Knight', 'Dark Knight Rises')
       ).to eq '52243a4cfc033e15700abdd78184d9e198d0956be71e0d9befe7044408d2bfb8'
     end
 
@@ -101,6 +101,27 @@ RSpec.describe SolidusViabill::Gateway, type: :model do
 
     it 'successfully updates source' do
       void_response
+      payment_source.reload
+      expect(payment_source.status).to eq 'CANCELED'
+    end
+  end
+
+  describe '#credit' do
+    subject(:credit_response) { gateway.credit(100, order.number, { originator: refund, currency: 'USD' }) }
+
+    before do
+      response = Net::HTTPNoContent.new('', '204', 'NoContent')
+      # rubocop:disable RSpec/AnyInstance
+      allow_any_instance_of(described_class).to receive(:send_post_request).and_return(response)
+      # rubocop:enable RSpec/AnyInstance
+    end
+
+    it 'successfully returns a response' do
+      expect(credit_response.class).to eq ActiveMerchant::Billing::Response
+    end
+
+    it 'successfully updates source' do
+      credit_response
       payment_source.reload
       expect(payment_source.status).to eq 'REFUNDED'
     end
