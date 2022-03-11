@@ -12,8 +12,13 @@ FactoryBot.define do
   end
 
   factory :viabill_payment_method, class: SolidusViabill::ViabillPaymentMethod do
-    name { 'Viabill' }
-    available_to_admin { true }
-    available_to_users { true }
+    name                           { 'Viabill' }
+    available_to_admin             { true }
+    available_to_users             { true }
+    preferred_viabill_api_key      { 'apikey' }
+    preferred_viabill_success_url  { 'https://example.com/api/checkout_success' }
+    preferred_viabill_cancel_url   { 'https://example.com/checkout/payment' }
+    preferred_viabill_callback_url { 'https://example.com/api/checkout_callback' }
+    preferred_viabill_test_env     { true }
   end
 end
