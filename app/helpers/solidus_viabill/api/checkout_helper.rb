@@ -33,13 +33,13 @@ module SolidusViabill
           }
         }
         request_body[:sha256check] = gateway.generate_signature(
-          gateway.api_key,
+          request_body[:apikey],
           request_body[:amount],
           request_body[:currency],
           request_body[:transaction],
           request_body[:order_number],
-          gateway.success_url,
-          gateway.cancel_url,
+          request_body[:success_url],
+          request_body[:cancel_url],
           gateway.secret_key
         )
         request_body
